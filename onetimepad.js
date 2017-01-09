@@ -1,25 +1,25 @@
 /* OneTimePad.js
- * Version 1.0
- * 
+ * Version 1.0.1
+ *
  * A JavaScript library implementation for the one-time pad cipher.
  * Based on the method described at http://krako.chez.com/nouveau/spy/cs013.htm
- * 
- * 
+ *
+ *
  * There are three functions:
- * 
+ *
  * 1. encode(text)
  *     Input:   A text string.
  *     Output:  Uses the codebook to output a number-encoded "code" string.
  *     Example: encode("Hello world") returns "3304111114".
  *     Notes:   Any input character that is not in the codebook will be filtered out.
  *              This is not encryption, the characters are merely substituted with numbers.
- * 
+ *
  * 2. decode(code)
  *     Input:   A number-encoded "code" string, such as the output of encode().
  *     Output:  Uses the codebook to output a text string.
  *     Example  decode("3304111114") returns "Hello world".
  *     Notes:   This is not decryption, the output is merely the reverse of encode().
- * 
+ *
  * 3. otp(message, key, mode, keyRepetition)
  *     Input:   message: Either a plaintext string or an encrypted message string.
  *              key: The encryption key.
@@ -37,16 +37,16 @@
  *              For the greatest security, the key should be as random as possible.
  *              Both the inputs codeMessage and codeKey need to be encoded with encode().
  *              Decrypted output is still number-encoded, so use decode() to get the plaintext.
- * 
- * 
+ *
+ *
  * Examples for implementing this library:
- * 
+ *
  *     Encryption:
  *         Input plaintext message "My secret message".
  *         Input plaintext key "jE1&;bWi3f+w7TI8k".
  *             return otp("My secret message", "jE1&;bWi3f+w7TI8k", "encrypt", false);
  *         This returns encrypted ciphertext "3754478888035502649989266753346614".
- * 
+ *
  *     Decryption:
  *          Input encrypted message "3754478888035502649989266753346614".
  *          Input plaintext key "jE1&;bWi3f+w7TI8k".
@@ -57,7 +57,7 @@
 
 /**
  *
- * @licstart  The following is the entire license notice for the 
+ * @licstart  The following is the entire license notice for the
  * JavaScript code in this page.
  *
  * Copyright (C) 2016  Lucas Bleackley Petter
@@ -81,6 +81,8 @@
  *
  */
 
+
+"use strict";
 
 // Codebook for converting between characters and code numbers.
 var codebook = [];
@@ -189,7 +191,7 @@ codebook[99] = "—";
 function encode(text) {
 	// Loop through each text character.
 	var code = [];
-	for (i=0; i<text.length; i++) {
+	for (var i=0; i<text.length; i++) {
 		// Check if the character is in the codebook, filter it out if it's not.
 		if (codebook.indexOf(text[i]) !== -1) {
 			// Get the character's code number from the code book.
@@ -210,7 +212,7 @@ function decode(code) {
 	code = code.match(/.{1,2}/g);
 	// Loop through each two-digit code number.
 	var text = [];
-	for (i=0; i<codeLength; i++) {
+	for (var i=0; i<codeLength; i++) {
 		// Convert the code from string to number format by multiplying by 1.
 		code[i] *= 1;
 		// Get the code number's character from the codebook.
@@ -221,9 +223,10 @@ function decode(code) {
 
 // Encrypt or decrypt a message with a key.
 function otp(message, key, mode, keyRepetition) {
+	var codeMessage, error;
 	// The message and key must not be empty.
-	if (message == "" || key == "") {
-		var error = "Error: The message and key must not be be empty.";
+	if (message === "" || key === "") {
+		error = "Error: The message and key must not be be empty.";
 		console.log("[OneTimePad.js] " + error);
 		return error;
 	}
@@ -231,21 +234,21 @@ function otp(message, key, mode, keyRepetition) {
 	var codeKey = encode(key);
 	// Only number-encode the message if using encrypt mode. In decrypt mode, the message should already be number-encoded.
 	if (mode == "encrypt") {
-		var codeMessage = encode(message);
+		codeMessage = encode(message);
 	} else if (mode == "decrypt") {
 		if (!isNaN(message)) {
-			var codeMessage = message;
+			codeMessage = message;
 		} else {
-			var error = "Error: When decrypting, the message must only contain numbers.";
+			error = "Error: When decrypting, the message must only contain numbers.";
 			console.log("[OneTimePad.js] " + error);
 			return error;
 		}
 	}
-	// The key should be at least the same length as the message. 
+	// The key should be at least the same length as the message.
 	if (codeKey.length < codeMessage.length) {
 		// If the key is shorter than the message and the keyRepetition flag is true, then repeat the key until it's long enough.
 		// This is NOT secure. For serious usage, the keyRepetition flag should never be set to true and the key should always be long enough.
-		if (keyRepetition == true) {
+		if (keyRepetition === true) {
 			if (mode == "encrypt") {
 				console.log("[OneTimePad.js] WARNING: The key is shorter than the message.\nThe keyRepetition flag has been set, so OneTimePad.js will now repeat the key until it's long enough, but this is not secure. Repetition of the key will cause statistical patterns in the ciphertext that will make it easier for a third party to decrypt it without the key. You really should use a key at that's least the same length as the message.");
 			}
@@ -254,7 +257,7 @@ function otp(message, key, mode, keyRepetition) {
 			}
 		// Otherwise, if the key is too short, fail with an error.
 		} else {
-			var error = "Error: The key is shorter than the message."
+			error = "Error: The key is shorter than the message.";
 			console.log("[OneTimePad.js] " + error);
 			return error;
 		}
@@ -264,7 +267,7 @@ function otp(message, key, mode, keyRepetition) {
 	codeKey = codeKey.split("");
 	// Loop through each one-digit code number.
 	var codeOutput = [];
-	for (i=0; i<codeMessage.length; i++) {
+	for (var i=0; i<codeMessage.length; i++) {
 		// Convert the codes from string to number format by multiplying by 1.
 		codeMessage[i] *= 1;
 		codeKey[i] *= 1;
